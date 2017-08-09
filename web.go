@@ -21,7 +21,7 @@ func githubHandler(w http.ResponseWriter, r *http.Request) {
 	repo := paths[1]
 	result, err := WatchGitHub(owner, repo)
 	if err != nil {
-		http.Error(w, "Fetch latest version failed", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	tmpl.Execute(w, result)

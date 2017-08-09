@@ -7,7 +7,7 @@ import (
 )
 
 var tmpl = template.Must(template.New("tmpl").Parse(
-	`<a href="https://github.com/{{ .Owner }}/{{ .Repo }} /archive/{{ .Commit }}.tar.gz">{{ .Version }}</a>
+	`<a href="https://github.com/{{ .Owner }}/{{ .Repo }}/archive/{{ .Commit }}.tar.gz">{{ .Version }}</a>
 `))
 
 func githubHandler(w http.ResponseWriter, r *http.Request) {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
@@ -52,7 +53,23 @@ func WatchGitHub(owner, repo string) (result *GitHub, err error) {
 		return
 	}
 	if len(tags) == 0 {
-		result.Version = fmt.Sprintf("0.0~git%s.0.%7.7s", headDate.Format("20060102"), headSHA1)
+		var allDayCommits []*github.RepositoryCommit
+		opt := &github.CommitsListOptions{
+			Since: headDate.Truncate(24 * time.Hour),
+			Until: headDate,
+		}
+		for {
+			dayCommits, resp, e := client.Repositories.ListCommits(ctx, owner, repo, opt)
+			if e != nil {
+				return nil, e
+			}
+			allDayCommits = append(allDayCommits, dayCommits...)
+			if resp.NextPage == 0 {
+				break
+			}
+			opt.Page = resp.NextPage
+		}
+		result.Version = fmt.Sprintf("0.0~git%s.%d.%7.7s", headDate.Format("20060102"), len(allDayCommits), headSHA1)
 		return
 	}
 

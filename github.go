@@ -34,6 +34,7 @@ func init() {
 	} else {
 		client = github.NewClient(nil)
 	}
+	client.UserAgent = "github.com/zhsj/git-watch"
 }
 
 func WatchGitHub(owner, repo string) (result *GitHub, err error) {

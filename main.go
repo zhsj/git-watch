@@ -21,6 +21,7 @@ func init() {
 func main() {
 	if *web {
 		http.HandleFunc("/github/", githubHandler)
+		http.HandleFunc("/github-download/", githubDownloader)
 		http.ListenAndServe(*listen, nil)
 		return
 	}

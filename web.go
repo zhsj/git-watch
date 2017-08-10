@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 	"text/template"
+
+	"github.com/zhsj/git-watch/watch"
 )
 
 var tmpl = template.Must(template.New("tmpl").Parse(
@@ -19,7 +21,7 @@ func githubHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	owner := paths[0]
 	repo := paths[1]
-	result, err := WatchGitHub(owner, repo)
+	result, err := watch.WatchGitHub(owner, repo)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

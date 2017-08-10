@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+
+	"github.com/zhsj/git-watch/watch"
 )
 
 var (
@@ -32,7 +34,7 @@ func main() {
 			flag.Usage()
 			return
 		}
-		result, err := WatchGitHub(*owner, *repo)
+		result, err := watch.WatchGitHub(*owner, *repo)
 		if err != nil {
 			fmt.Println(err)
 		} else {

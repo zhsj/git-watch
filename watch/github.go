@@ -1,14 +1,9 @@
 package watch
 
 import (
-	"context"
 	"fmt"
-	"os"
 	"strings"
 	"time"
-
-	"github.com/google/go-github/github"
-	"golang.org/x/oauth2"
 )
 
 type GitHub struct {
@@ -16,26 +11,6 @@ type GitHub struct {
 	Repo    string
 	Commit  string
 	Version string
-}
-
-var (
-	client *github.Client
-	ctx    context.Context
-)
-
-func init() {
-	ctx = context.Background()
-	token := os.Getenv("GITHUB_TOKEN")
-	if token != "" {
-		ts := oauth2.StaticTokenSource(
-			&oauth2.Token{AccessToken: token},
-		)
-		tc := oauth2.NewClient(ctx, ts)
-		client = github.NewClient(tc)
-	} else {
-		client = github.NewClient(nil)
-	}
-	client.UserAgent = "github.com/zhsj/git-watch"
 }
 
 func getGitHubCommit(owner, repo string) (string, *time.Time, error) {
@@ -48,11 +23,11 @@ func getGitHubCommit(owner, repo string) (string, *time.Time, error) {
 		return "", nil, err
 	}
 	commit := strings.Split(entry.Id, "/")[1]
-	time, err := time.Parse("2006-01-02T15:04:05Z", entry.Updated)
+	date, err := time.Parse("2006-01-02T15:04:05Z", entry.Updated)
 	if err != nil {
 		return "", nil, err
 	}
-	return commit, &time, nil
+	return commit, &date, nil
 }
 
 func getGitHubTag(owner, repo string) (string, *time.Time, error) {
@@ -65,53 +40,30 @@ func getGitHubTag(owner, repo string) (string, *time.Time, error) {
 		return "", nil, err
 	}
 	tag := strings.Split(entry.Id, "/")[2]
-	time, err := time.Parse("2006-01-02T15:04:05Z", entry.Updated)
+	date, err := time.Parse("2006-01-02T15:04:05Z", entry.Updated)
 	if err != nil {
 		return "", nil, err
 	}
-	return tag, &time, nil
+	return tag, &date, nil
 }
 
-func WatchGitHub(owner, repo string) (result *GitHub, err error) {
-	result = &GitHub{Owner: owner, Repo: repo}
+func WatchGitHub(owner, repo string) (*GitHub, error) {
+	result := &GitHub{Owner: owner, Repo: repo}
 
-	headSHA1, _, err := client.Repositories.GetCommitSHA1(ctx, owner, repo, "HEAD", "")
+	commit, date, err := getGitHubCommit(owner, repo)
 	if err != nil {
-		return
+		return result, err
 	}
-	result.Commit = headSHA1
+	result.Commit = commit
 
-	headCommit, _, err := client.Repositories.GetCommit(ctx, owner, repo, headSHA1)
-	headDate := headCommit.Commit.Committer.GetDate()
-
-	tags, _, err := client.Repositories.ListTags(ctx, owner, repo, nil)
-	if err != nil {
-		return
-	}
-	if len(tags) == 0 {
-		var allDayCommits []*github.RepositoryCommit
-		opt := &github.CommitsListOptions{
-			Since: headDate.Truncate(24 * time.Hour),
-			Until: headDate,
-		}
-		for {
-			dayCommits, resp, e := client.Repositories.ListCommits(ctx, owner, repo, opt)
-			if e != nil {
-				return nil, e
-			}
-			allDayCommits = append(allDayCommits, dayCommits...)
-			if resp.NextPage == 0 {
-				break
-			}
-			opt.Page = resp.NextPage
-		}
-		result.Version = fmt.Sprintf("0.0~git%s.%d.%7.7s", headDate.Format("20060102"), len(allDayCommits), headSHA1)
-		return
+	tag, _, err := getGitHubTag(owner, repo)
+	if err == nil {
+		result.Version = fmt.Sprintf("%s+git%s.%7.7s", tag, date.Format("20060102"), commit)
+	} else if err.Error() == "No Entries" {
+		result.Version = fmt.Sprintf("0.0~git%s.%7.7s", date.Format("20060102"), commit)
+	} else {
+		return result, err
 	}
 
-	latestTag := tags[0]
-	compare, _, err := client.Repositories.CompareCommits(ctx, owner, repo, latestTag.GetName(), headSHA1)
-	result.Version = fmt.Sprintf("%s+git%s.%d.%7.7s", latestTag.GetName(), headDate.Format("20060102"),
-		compare.GetTotalCommits(), headSHA1)
-	return
+	return result, nil
 }

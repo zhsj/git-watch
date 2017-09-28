@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/zhsj/git-watch/watch"
@@ -24,8 +25,8 @@ func main() {
 	if *web {
 		http.HandleFunc("/github/", githubHandler)
 		http.HandleFunc("/github-download/", githubDownloader)
-		http.ListenAndServe(*listen, nil)
-		return
+		log.Printf("About to listen on %s", *listen)
+		log.Fatal(http.ListenAndServe(*listen, nil))
 	}
 	switch *service {
 	case "github":

@@ -11,7 +11,7 @@ import (
 
 var tmpl = template.Must(template.New("tmpl").Parse(
 	`<a href="/github-download/{{ .Owner }}/{{ .Repo }}/{{ .Commit }}/{{ .Version }}.tar.gz">{{ .Version }}</a>
-`))
+	<p>Powered by <a href="//github.com/zhsj/git-watch">git-watch</a>`))
 
 func githubHandler(w http.ResponseWriter, r *http.Request) {
 	paths := strings.Split(r.URL.Path[len("/github/"):], "/")

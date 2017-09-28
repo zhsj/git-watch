@@ -4,7 +4,7 @@
 
 ```
 version=4
-opts="filenamemangle=s%(?:.*?)?([^/]*)\.tar\.gz%<project>-$1.tar.gz%" \
-    http://<server>/github/<owner>/<repo> \
+opts="filenamemangle=s%(?:.*?)?@ANY_VERSION@\.tar\.gz%@PACKAGE@-$1.tar.gz%" \
+    https://watch.zhsj.me/github/<owner>/<repo> \
     (?:.*?/)?([^/]*)\.tar\.gz
 ```

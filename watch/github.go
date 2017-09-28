@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/google/go-github/github"
@@ -35,6 +36,40 @@ func init() {
 		client = github.NewClient(nil)
 	}
 	client.UserAgent = "github.com/zhsj/git-watch"
+}
+
+func getGitHubCommit(owner, repo string) (string, *time.Time, error) {
+	data, err := atomFetch(strings.Join([]string{"https://github.com", owner, repo, "commits.atom"}, "/"))
+	if err != nil {
+		return "", nil, err
+	}
+	entry, err := atomGetLatest(data)
+	if err != nil {
+		return "", nil, err
+	}
+	commit := strings.Split(entry.Id, "/")[1]
+	time, err := time.Parse("2006-01-02T15:04:05Z", entry.Updated)
+	if err != nil {
+		return "", nil, err
+	}
+	return commit, &time, nil
+}
+
+func getGitHubTag(owner, repo string) (string, *time.Time, error) {
+	data, err := atomFetch(strings.Join([]string{"https://github.com", owner, repo, "tags.atom"}, "/"))
+	if err != nil {
+		return "", nil, err
+	}
+	entry, err := atomGetLatest(data)
+	if err != nil {
+		return "", nil, err
+	}
+	tag := strings.Split(entry.Id, "/")[2]
+	time, err := time.Parse("2006-01-02T15:04:05Z", entry.Updated)
+	if err != nil {
+		return "", nil, err
+	}
+	return tag, &time, nil
 }
 
 func WatchGitHub(owner, repo string) (result *GitHub, err error) {

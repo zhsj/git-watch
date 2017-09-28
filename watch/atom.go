@@ -3,6 +3,8 @@ package watch
 import (
 	"encoding/xml"
 	"errors"
+	"io/ioutil"
+	"net/http"
 )
 
 type Atom struct {
@@ -25,4 +27,13 @@ func atomGetLatest(data []byte) (*Entry, error) {
 		return nil, errors.New("No Entries")
 	}
 	return atom.EntryList[0], nil
+}
+
+func atomFetch(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	return ioutil.ReadAll(resp.Body)
 }

@@ -44,7 +44,7 @@ func getGitHubTag(owner, repo string) (string, *time.Time, error) {
 	if err != nil {
 		return "", nil, err
 	}
-	return tag, &date, nil
+	return strings.TrimLeft(tag, "v"), &date, nil
 }
 
 func WatchGitHub(owner, repo string) (*GitHub, error) {
